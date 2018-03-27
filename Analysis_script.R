@@ -688,38 +688,40 @@ ggplot(data = props.long, aes(x = YEAR, y = number)) + geom_bar(aes(fill = outco
        subtitle = "northern and western counties of Maine & NH")
   
 #Model incidence ~ time
-y <- cbind(props$success,props$failures)  
+FOSP.df <- data.frame(success = props$success, failure = props$failures,
+                      year = props$YEAR, effort = props$effort)
 
-
-FOSP.m1 <- glm(y ~ props$YEAR + props$effort, family = binomial)
+FOSP.m1 <- glm(cbind(success,failure) ~ year + effort, family = binomial, data = FOSP.df)
 summary(FOSP.m1)
 
-FOSP.m2 <- glm(y ~ props$YEAR, family = binomial)
+FOSP.m2 <- glm(cbind(success,failure) ~ year, family = binomial, data = FOSP.df)
 summary(FOSP.m2)
+
+# Test for overdispersion:
+## None, estimated at 0.85
+### FOSP.m2 <- glm(y ~ props$YEAR, family = quasibinomial)
+### summary(FOSP.m2)
 
 # The best model is the simpler model, with an effect of Year only:
 anova(FOSP.m1, FOSP.m2, test = "Chisq")
 
-# make sequence of x
-xyear <- seq(from = 2003, to = 2016, by = 1)
-
 # predict values of y from xv and m2
-newdata <- data.frame(YEAR = seq(from = 2003, to = 2016, by = 1), effort = rep(1190,14))
+newdata <- data.frame(year = seq(from = 2003, to = 2016, by = 0.01), effort = rep(1000,1301))
 yvals <- predict(FOSP.m2, newdata = newdata, type = "response",se.fit = TRUE)
 yvals$upperci <- yvals$fit + yvals$se.fit*2
 yvals$lowerci <- yvals$fit - yvals$se.fit*2
 
-opar <- par()
+
 par(mar = c(5.1,5.1,4.1,2.1))
-plot(x = newdata$YEAR, y = props$proportion, ylab = "Proportion of checklists\nreporting Fox Sparrow",
+plot(x = props$YEAR, y = props$proportion, ylab = "Proportion of checklists\nreporting Fox Sparrow",
      xlab = "Year",
      pch = 16, col = "blue", lwd = 2)
 
 # add the fitted line
-lines(newdata$YEAR, yvals$fit, col = "red", lwd = 2)
-lines(newdata$YEAR, yvals$lowerci, col = "red", lwd = 2, lty = 3)
-lines(newdata$YEAR, yvals$upperci, col = "red", lwd = 2, lty = 3)
-par(opar)
+lines(newdata$year, yvals$fit, col = "red", lwd = 2)
+lines(newdata$year, yvals$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$year, yvals$upperci, col = "red", lwd = 2, lty = 3)
+
 
 # Repeat approach for BITH:
 #turn this into a 2-column successes/failures frame:
@@ -752,34 +754,37 @@ ggplot(data = propsBith.long, aes(x = YEAR, y = number)) + geom_bar(aes(fill = o
        subtitle = "northern and western counties of Maine & NH")
 
 #Model incidence ~ time
-yB <- cbind(propsBith$success,propsBith$failures)  
+BITH.df <- data.frame(success = propsBith$success, failure = propsBith$failures,
+                      year = propsBith$YEAR, effort = propsBith$effort)
 
-
-BITH.m1 <- glm(yB ~ propsBith$YEAR + propsBith$effort, family = binomial)
+BITH.m1 <- glm(cbind(success,failure) ~ year + effort, family = binomial, data = BITH.df)
 summary(BITH.m1)
 
-BITH.m2 <- glm(yB ~ propsBith$YEAR, family = binomial)
+BITH.m2 <- glm(cbind(success,failure) ~ year, family = binomial, data = BITH.df)
 summary(BITH.m2)
+
+BITH.m2OD <- glm(cbind(success,failure) ~ year, family = quasibinomial, data = BITH.df)
+summary(BITH.m2OD)
 
 # The best model is the simpler model, with an effect of Year only:
 anova(BITH.m1, BITH.m2, test = "Chisq")
 
 # predict values of y from xv and m2
-yvalsBith <- predict(BITH.m2, newdata = newdata, type = "response",se.fit = TRUE)
+yvalsBith <- predict(BITH.m2OD, newdata = newdata, type = "response",se.fit = TRUE)
 yvalsBith$upperci <- yvalsBith$fit + yvalsBith$se.fit*2
 yvalsBith$lowerci <- yvalsBith$fit - yvalsBith$se.fit*2
 
-opar <- par()
+
 par(mar = c(5.1,5.1,4.1,2.1))
-plot(x = newdata$YEAR, y = propsBith$proportion, ylab = "Proportion of checklists\nreporting Bicknell's Thrush",
+plot(x = propsBith$YEAR, y = propsBith$proportion, ylab = "Proportion of checklists\nreporting Bicknell's Thrush",
      xlab = "Year",
      pch = 16, col = "blue", lwd = 2)
 
 # add the fitted line
-lines(newdata$YEAR, yvalsBith$fit, col = "red", lwd = 2)
-lines(newdata$YEAR, yvalsBith$lowerci, col = "red", lwd = 2, lty = 3)
-lines(newdata$YEAR, yvalsBith$upperci, col = "red", lwd = 2, lty = 3)
-par(opar)
+lines(newdata$year, yvalsBith$fit, col = "red", lwd = 2)
+lines(newdata$year, yvalsBith$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$year, yvalsBith$upperci, col = "red", lwd = 2, lty = 3)
+
 # and for BLPW:
 #turn this into a 2-column successes/failures frame:
 propsBlpw <- uniqueChecklistsGridded %>%
@@ -812,58 +817,77 @@ ggplot(data = propsBlpw.long, aes(x = YEAR, y = number)) + geom_bar(aes(fill = o
        subtitle = "northern and western counties of Maine & NH")
 
 #Model incidence ~ time
-yBl <- cbind(propsBlpw$success,propsBlpw$failures)  
 
+BLPW.df <- data.frame(success = propsBlpw$success, failure = propsBlpw$failures,
+                      year = propsBlpw$YEAR, effort = propsBlpw$effort)
 
-BLPW.m1 <- glm(yBl ~ propsBlpw$YEAR + propsBlpw$effort, family = binomial)
+BLPW.m1 <- glm(cbind(success,failure) ~ year + effort, family = binomial, data = BLPW.df)
 summary(BLPW.m1)
 
-BLPW.m2 <- glm(yBl ~ propsBlpw$YEAR, family = binomial)
+BLPW.m2 <- glm(cbind(success,failure) ~ year, family = binomial, data = BLPW.df)
 summary(BLPW.m2)
 
-BLPW.m3 <- glm(yBl ~ propsBlpw$YEAR + I(propsBlpw$YEAR^2) + propsBlpw$effort, family = binomial)
-BLPW.m3 <- glm(yBl ~ poly(propsBlpw$YEAR,2) + propsBlpw$effort, family = binomial)
-
+BLPW.m3 <- glm(cbind(success,failure) ~ year + I(year^2) + effort, family = binomial, data = BLPW.df)
 summary(BLPW.m3)
 
 # The best model is the simpler model, with an effect of Year only:
 anova(BLPW.m1, BLPW.m2, BLPW.m3, test = "Chisq")
 
 # predict values of y from xv and m2
-yvalsBlpw <- predict(BLPW.m3, newdata = newdata, type = "response",se.fit = TRUE)
-yvalsBlpw$upperci <- round(yvalsBlpw$fit + yvalsBlpw$se.fit*2)
-yvalsBlpw$lowerci <- round(yvalsBlpw$fit - yvalsBlpw$se.fit*2)
+yvalsBlpw <- predict(BLPW.m2, newdata = newdata, type = "response",se.fit = TRUE)
+yvalsBlpw$upperci <- yvalsBlpw$fit + yvalsBlpw$se.fit*2
+yvalsBlpw$lowerci <- yvalsBlpw$fit - yvalsBlpw$se.fit*2
 
-opar <- par()
 par(mar = c(5.1,5.1,4.1,2.1))
-plot(x = newdata$YEAR, y = propsBlpw$proportion, ylab = "Proportion of checklists\nreporting Blackpoll Warbler",
+plot(x = propsBlpw$YEAR, y = propsBlpw$proportion, ylab = "Proportion of checklists\nreporting Blackpoll Warbler",
      xlab = "Year",
      pch = 16, col = "blue", lwd = 2)
 
 # add the fitted line
-lines(newdata$YEAR, yvalsBlpw$fit, col = "red", lwd = 2)
-lines(newdata$YEAR, yvalsBlpw$lowerci, col = "red", lwd = 2, lty = 3)
-lines(newdata$YEAR, yvalsBlpw$upperci, col = "red", lwd = 2, lty = 3)
-par(opar)
+lines(newdata$year, yvalsBlpw$fit, col = "red", lwd = 2)
+lines(newdata$year, yvalsBlpw$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$year, yvalsBlpw$upperci, col = "red", lwd = 2, lty = 3)
 
-##
-opar <- par()
+## Plot together:
+### Fox Sparrow
+
 par(mar = c(5.1,5.1,4.1,2.1))
-plot(x = newdata$YEAR, y = props$proportion, ylab = "Proportion of checklists reporting Fox Sparrow,\nBicknell's Thrush, or Blackpoll Warbler",
+par(mfrow = c(2,2))
+plot(x = props$YEAR, y = props$proportion, ylab = "Proportion of cells\nreporting Fox Sparrow",
      xlab = "Year",
-     pch = 16, col = "blue", lwd = 2,
-     ylim = c(0,0.45))
-points(x = newdata$YEAR,y = propsBith$proportion)
-points(x = newdata$YEAR, y = propsBlpw$proportion, col = "red")
+     pch = 16, col = "red", lwd = 2)
 
-lines(newdata$YEAR, yvals$fit, col = "blue", lwd = 2)
-lines(newdata$YEAR, yvals$lowerci, col = "blue", lwd = 2, lty = 3)
-lines(newdata$YEAR, yvals$upperci, col = "blue", lwd = 2, lty = 3)
+# add the fitted line
+lines(newdata$year, yvals$fit, col = "red", lwd = 2)
+lines(newdata$year, yvals$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$year, yvals$upperci, col = "red", lwd = 2, lty = 3)
 
-lines(newdata$YEAR, yvalsBith$fit, col = "black", lwd = 2)
-lines(newdata$YEAR, yvalsBith$lowerci, col = "black", lwd = 2, lty = 3)
-lines(newdata$YEAR, yvalsBith$upperci, col = "black", lwd = 2, lty = 3)
+### Bicknell's Thrush:
+plot(x = propsBith$YEAR, y = propsBith$proportion, ylab = "Proportion of cells\nreporting Bicknell's Thrush",
+     xlab = "Year",
+     pch = 16, col = "blue", lwd = 2)
 
-lines(newdata$YEAR, yvalsBlpw$fit, col = "red", lwd = 2)
-lines(newdata$YEAR, yvalsBlpw$lowerci, col = "red", lwd = 2, lty = 3)
-lines(newdata$YEAR, yvalsBlpw$upperci, col = "red", lwd = 2, lty = 3)
+# add the fitted line
+lines(newdata$year, yvalsBith$fit, col = "blue", lwd = 2)
+lines(newdata$year, yvalsBith$lowerci, col = "blue", lwd = 2, lty = 3)
+lines(newdata$year, yvalsBith$upperci, col = "blue", lwd = 2, lty = 3)
+
+
+### Blackpoll Warbler
+plot(x = propsBlpw$YEAR, y = propsBlpw$proportion, ylab = "Proportion of cells\nreporting Blackpoll Warbler",
+     xlab = "Year",
+     pch = 16, col = "black", lwd = 2)
+
+# add the fitted line
+lines(newdata$year, yvalsBlpw$fit, col = "black", lwd = 2)
+lines(newdata$year, yvalsBlpw$lowerci, col = "black", lwd = 2, lty = 3)
+lines(newdata$year, yvalsBlpw$upperci, col = "black", lwd = 2, lty = 3)
+
+coef(FOSP.m2) 
+confint(FOSP.m2) #average gain of 18% per year, 95% CI = 9.7 - 27.4
+
+coef(BITH.m2) 
+confint(BITH.m2) #average gain of 3.8%, 95% CI = -1.5% - 9.3%
+
+coef(BLPW.m1)
+confint(BLPW.m1) #average loss of 14% per year, 95% CI = -26.1% - -2.3%
