@@ -697,27 +697,173 @@ summary(FOSP.m1)
 FOSP.m2 <- glm(y ~ props$YEAR, family = binomial)
 summary(FOSP.m2)
 
-
+# The best model is the simpler model, with an effect of Year only:
 anova(FOSP.m1, FOSP.m2, test = "Chisq")
 
 # make sequence of x
 xyear <- seq(from = 2003, to = 2016, by = 1)
 
 # predict values of y from xv and m2
-newdata <- data.frame(YEAR = seq(from = 2003, to = 2016, by = 1), effort = rep(1000,14))
+newdata <- data.frame(YEAR = seq(from = 2003, to = 2016, by = 1), effort = rep(1190,14))
 yvals <- predict(FOSP.m2, newdata = newdata, type = "response",se.fit = TRUE)
 yvals$upperci <- yvals$fit + yvals$se.fit*2
 yvals$lowerci <- yvals$fit - yvals$se.fit*2
 
-# plot the proportion of males as a function of density
-plot(x = newdata$YEAR, y = props$proportion, ylab = "Proportion of checklists reporting Fox Sparrow", 
+opar <- par()
+par(mar = c(5.1,5.1,4.1,2.1))
+plot(x = newdata$YEAR, y = props$proportion, ylab = "Proportion of checklists\nreporting Fox Sparrow",
+     xlab = "Year",
      pch = 16, col = "blue", lwd = 2)
 
 # add the fitted line
 lines(newdata$YEAR, yvals$fit, col = "red", lwd = 2)
 lines(newdata$YEAR, yvals$lowerci, col = "red", lwd = 2, lty = 3)
 lines(newdata$YEAR, yvals$upperci, col = "red", lwd = 2, lty = 3)
+par(opar)
 
-install.packages("effects")
-library(effects)
-Effect(focal.predictors = "YEAR", mod = FOSP.m2)
+# Repeat approach for BITH:
+#turn this into a 2-column successes/failures frame:
+propsBith <- uniqueChecklistsGridded %>%
+  filter(COUNTRY == "United States") %>%
+  filter(YEAR > 2002) %>%
+  group_by(YEAR,grid.id) %>%
+  summarize(BITHp = max(BITHp), effort = sum(EFFORT_HRS)) %>%
+  group_by(YEAR, BITHp) %>%
+  summarize(n = n_distinct(grid.id), effort = sum(effort))
+
+propsBith <- propsBith %>%
+  mutate(success = ifelse(BITHp == 1,n,0))
+
+propsBith <- propsBith %>%
+  mutate(failures = ifelse(BITHp == 0,n,0))
+
+propsBith <- propsBith %>%
+  group_by(YEAR) %>%
+  summarize(success = max(success), failures = max(failures),
+            effort = sum(effort)) %>%
+  mutate(proportion = success/(success+failures))
+
+#Make a long version for plotting in ggplot
+propsBith.long <- gather(propsBith, outcome, number, success:failures, factor_key = TRUE)
+ggplot(data = propsBith.long, aes(x = YEAR, y = number)) + geom_bar(aes(fill = outcome), position = "dodge", 
+                                                                stat = "identity") + 
+  xlab("Year") + ylab("Number of grids") + 
+  labs(title = "eBird checklists with and without BITH",
+       subtitle = "northern and western counties of Maine & NH")
+
+#Model incidence ~ time
+yB <- cbind(propsBith$success,propsBith$failures)  
+
+
+BITH.m1 <- glm(yB ~ propsBith$YEAR + propsBith$effort, family = binomial)
+summary(BITH.m1)
+
+BITH.m2 <- glm(yB ~ propsBith$YEAR, family = binomial)
+summary(BITH.m2)
+
+# The best model is the simpler model, with an effect of Year only:
+anova(BITH.m1, BITH.m2, test = "Chisq")
+
+# predict values of y from xv and m2
+yvalsBith <- predict(BITH.m2, newdata = newdata, type = "response",se.fit = TRUE)
+yvalsBith$upperci <- yvalsBith$fit + yvalsBith$se.fit*2
+yvalsBith$lowerci <- yvalsBith$fit - yvalsBith$se.fit*2
+
+opar <- par()
+par(mar = c(5.1,5.1,4.1,2.1))
+plot(x = newdata$YEAR, y = propsBith$proportion, ylab = "Proportion of checklists\nreporting Bicknell's Thrush",
+     xlab = "Year",
+     pch = 16, col = "blue", lwd = 2)
+
+# add the fitted line
+lines(newdata$YEAR, yvalsBith$fit, col = "red", lwd = 2)
+lines(newdata$YEAR, yvalsBith$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$YEAR, yvalsBith$upperci, col = "red", lwd = 2, lty = 3)
+par(opar)
+# and for BLPW:
+#turn this into a 2-column successes/failures frame:
+propsBlpw <- uniqueChecklistsGridded %>%
+  filter(COUNTRY == "United States") %>%
+  filter(YEAR > 2002) %>%
+  group_by(YEAR,grid.id) %>%
+  summarize(BLPWp = max(BLPWp), effort = sum(EFFORT_HRS)) %>%
+  group_by(YEAR, BLPWp) %>%
+  summarize(n = n_distinct(grid.id), effort = sum(effort))
+
+propsBlpw <- propsBlpw %>%
+  mutate(success = ifelse(BLPWp == 1,n,0))
+
+propsBlpw<- propsBlpw %>%
+  mutate(failures = ifelse(BLPWp == 0,n,0))
+
+propsBlpw <- propsBlpw %>%
+  group_by(YEAR) %>%
+  summarize(success = max(success), failures = max(failures),
+            effort = sum(effort)) %>%
+  mutate(proportion = success/(success+failures))
+
+
+#Make a long version for plotting in ggplot
+propsBlpw.long <- gather(propsBlpw, outcome, number, success:failures, factor_key = TRUE)
+ggplot(data = propsBlpw.long, aes(x = YEAR, y = number)) + geom_bar(aes(fill = outcome), position = "dodge", 
+                                                                    stat = "identity") + 
+  xlab("Year") + ylab("Number of grids") + 
+  labs(title = "eBird checklists with and without BLPW",
+       subtitle = "northern and western counties of Maine & NH")
+
+#Model incidence ~ time
+yBl <- cbind(propsBlpw$success,propsBlpw$failures)  
+
+
+BLPW.m1 <- glm(yBl ~ propsBlpw$YEAR + propsBlpw$effort, family = binomial)
+summary(BLPW.m1)
+
+BLPW.m2 <- glm(yBl ~ propsBlpw$YEAR, family = binomial)
+summary(BLPW.m2)
+
+BLPW.m3 <- glm(yBl ~ propsBlpw$YEAR + I(propsBlpw$YEAR^2) + propsBlpw$effort, family = binomial)
+BLPW.m3 <- glm(yBl ~ poly(propsBlpw$YEAR,2) + propsBlpw$effort, family = binomial)
+
+summary(BLPW.m3)
+
+# The best model is the simpler model, with an effect of Year only:
+anova(BLPW.m1, BLPW.m2, BLPW.m3, test = "Chisq")
+
+# predict values of y from xv and m2
+yvalsBlpw <- predict(BLPW.m3, newdata = newdata, type = "response",se.fit = TRUE)
+yvalsBlpw$upperci <- round(yvalsBlpw$fit + yvalsBlpw$se.fit*2)
+yvalsBlpw$lowerci <- round(yvalsBlpw$fit - yvalsBlpw$se.fit*2)
+
+opar <- par()
+par(mar = c(5.1,5.1,4.1,2.1))
+plot(x = newdata$YEAR, y = propsBlpw$proportion, ylab = "Proportion of checklists\nreporting Blackpoll Warbler",
+     xlab = "Year",
+     pch = 16, col = "blue", lwd = 2)
+
+# add the fitted line
+lines(newdata$YEAR, yvalsBlpw$fit, col = "red", lwd = 2)
+lines(newdata$YEAR, yvalsBlpw$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$YEAR, yvalsBlpw$upperci, col = "red", lwd = 2, lty = 3)
+par(opar)
+
+##
+opar <- par()
+par(mar = c(5.1,5.1,4.1,2.1))
+plot(x = newdata$YEAR, y = props$proportion, ylab = "Proportion of checklists reporting Fox Sparrow,\nBicknell's Thrush, or Blackpoll Warbler",
+     xlab = "Year",
+     pch = 16, col = "blue", lwd = 2,
+     ylim = c(0,0.45))
+points(x = newdata$YEAR,y = propsBith$proportion)
+points(x = newdata$YEAR, y = propsBlpw$proportion, col = "red")
+
+lines(newdata$YEAR, yvals$fit, col = "blue", lwd = 2)
+lines(newdata$YEAR, yvals$lowerci, col = "blue", lwd = 2, lty = 3)
+lines(newdata$YEAR, yvals$upperci, col = "blue", lwd = 2, lty = 3)
+
+lines(newdata$YEAR, yvalsBith$fit, col = "black", lwd = 2)
+lines(newdata$YEAR, yvalsBith$lowerci, col = "black", lwd = 2, lty = 3)
+lines(newdata$YEAR, yvalsBith$upperci, col = "black", lwd = 2, lty = 3)
+
+lines(newdata$YEAR, yvalsBlpw$fit, col = "red", lwd = 2)
+lines(newdata$YEAR, yvalsBlpw$lowerci, col = "red", lwd = 2, lty = 3)
+lines(newdata$YEAR, yvalsBlpw$upperci, col = "red", lwd = 2, lty = 3)
