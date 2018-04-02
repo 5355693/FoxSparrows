@@ -891,3 +891,24 @@ confint(BITH.m2) #average gain of 3.8%, 95% CI = -1.5% - 9.3%
 
 coef(BLPW.m1)
 confint(BLPW.m1) #average loss of 14% per year, 95% CI = -26.1% - -2.3%
+
+#Niche modeling with Wallace
+#install.packages("wallace")
+library(wallace)
+
+# Create a presence-only database for Canada, use this to estimate potential range, and see how it compares
+# to area of expansion.
+fospPresenceCanada <- checklists.unique %>%
+  filter(FOSPp == 1 & COUNTRY == "Canada") %>%
+  select(SAMPLING_EVENT_ID:COUNTY)
+## Re-arrange and re-name columns to meet Wallace specs:
+fospPresenceCanada$name <- "Passerella iliaca"
+fospPresenceCanada <- fospPresenceCanada[,c(12,4,3,2,1,5,6,7,8,9,10,11)]
+colnames(fospPresenceCanada) <- c("name","longitude","latitude","sample","event","year","month","day","time","country","state","county")
+write.csv(fospPresenceCanada,"fospPresenceCanada.csv")
+
+fospPresenceCanadaSample <- head(fospPresenceCanada)
+write.csv(fospPresenceCanadaSample,"fospPresenceCanadaSample.csv")
+options(java.parameters = "-Xmx800000m")
+run_wallace()
+
