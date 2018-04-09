@@ -18,6 +18,14 @@ ebAllFosp.reduced <- ebAllFosp %>%
            STATE_PROVINCE == "New York"|STATE_PROVINCE == "Vermont"|
            STATE_PROVINCE == "New Brunswick"|STATE_PROVINCE == "Nova Scotia"|
            STATE_PROVINCE == "Quebec")
+
+## Here's a broader file for doing an SDM - might be useful to have observations from other provinces:
+ebAllFosp.reduced2 <- ebAllFosp %>%
+  filter(STATE_PROVINCE == "Newfoundland and Labrador"|
+           STATE_PROVINCE == "New Brunswick"|STATE_PROVINCE == "Nova Scotia"|
+           STATE_PROVINCE == "Quebec"|STATE_PROVINCE == "Ontario"|
+           STATE_PROVINCE == "Prince Edward Island"|STATE_PROVINCE == "Saskatchewan"|
+           STATE_PROVINCE == "Manitoba")
 library(lubridate)
 ebAllFosp.reduced$MONTH = month(ebAllFosp.reduced$`OBSERVATION DATE`)
 ebAllFosp.reduced$YEAR = year(ebAllFosp.reduced$`OBSERVATION DATE`)
@@ -27,6 +35,27 @@ ebAllFosp.reduced <-
   filter(MONTH == 6|MONTH == 7)
 write.csv(ebAllFosp.reduced,file = "ebdFOSP_Jun_Jul.csv")
 
+## Here's a broader file for doing an SDM - might be useful to have observations from other provinces:
+ebAllFosp.reduced2 <- ebAllFosp %>%
+  filter(STATE_PROVINCE == "Newfoundland and Labrador"|
+           STATE_PROVINCE == "New Brunswick"|STATE_PROVINCE == "Nova Scotia"|
+           STATE_PROVINCE == "Quebec"|STATE_PROVINCE == "Ontario"|
+           STATE_PROVINCE == "Prince Edward Island"|STATE_PROVINCE == "Saskatchewan"|
+           STATE_PROVINCE == "Manitoba")
+ebAllFosp.reduced2$MONTH = month(ebAllFosp.reduced2$`OBSERVATION DATE`)
+ebAllFosp.reduced2$YEAR = year(ebAllFosp.reduced2$`OBSERVATION DATE`)
+
+ebAllFosp.reduced2 <-
+  ebAllFosp.reduced2%>%
+  filter(MONTH == 6|MONTH == 7)
+
+ebAllFosp.reduced2 <-
+  ebAllFosp.reduced2%>%
+  group_by(STATE_PROVINCE)%>%
+  sample_frac(0.05, replace = FALSE)
+
+ebAllFosp.reduced2 <- dplyr::select(ebAllFosp.reduced2,6,LATITUDE,LONGITUDE)
+write.csv(ebAllFosp.reduced2, "Passerella_iliaca_Canada.csv")
 #Map them
 data("wrld_simpl")
 plot(wrld_simpl, xlim = c(-80,-60), ylim = c(42,50), axes = TRUE, col = "light yellow")
@@ -894,6 +923,7 @@ confint(BLPW.m1) #average loss of 14% per year, 95% CI = -26.1% - -2.3%
 
 #Niche modeling with Wallace
 #install.packages("wallace")
+install.packages("auk")
 library(wallace)
 
 # Create a presence-only database for Canada, use this to estimate potential range, and see how it compares
@@ -912,3 +942,10 @@ write.csv(fospPresenceCanadaSample,"fospPresenceCanadaSample.csv")
 options(java.parameters = "-Xmx800000m")
 run_wallace()
 
+## Look at BBS trends:
+maineBBS <- read.csv("maineFoxSparrowBBS.csv")
+maineBBSzerofill <- data.frame(year = seq(1993,2016,1),
+                               count = c(2,6,9,9,5,19,24,20,22,8,10,0,6,3,3,1,1,1,0,0,3,0,0,6))
+ggplot(maineBBSzerofill, aes(x = year, y = count)) + geom_line() + geom_point() + 
+  scale_x_continuous(breaks = seq(1993,2016,1)) + xlab("Year") + ylab("Fox Sparrows counted on BBS routes in Maine") + 
+  theme(axis.text.x = element_text(angle = 320, vjust = 0.5))
