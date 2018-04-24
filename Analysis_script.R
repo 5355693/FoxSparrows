@@ -949,3 +949,41 @@ maineBBSzerofill <- data.frame(year = seq(1993,2016,1),
 ggplot(maineBBSzerofill, aes(x = year, y = count)) + geom_line() + geom_point() + 
   scale_x_continuous(breaks = seq(1993,2016,1)) + xlab("Year") + ylab("Fox Sparrows counted on BBS routes in Maine") + 
   theme(axis.text.x = element_text(angle = 320, vjust = 0.5))
+
+ggplot(maineBBS, aes(x = year, y = count)) + geom_line() + geom_point() + 
+  scale_x_continuous(breaks = seq(1993,2016,1)) + xlab("Year") + ylab("Fox Sparrows counted on BBS routes in Maine") + 
+  theme(axis.text.x = element_text(angle = 320, vjust = 0.5)) + facet_wrap(~route)
+
+##BBS Canada trends:
+nbTrends <- read.csv("nbTrends.csv")
+plot(nbTrends$year, nbTrends$abundance, ylim = c(0.2,0.8), ylab = "Index of abundance", xlab = "Year",
+      main = "Fox Sparrow abundance on NB BBS routes")
+lines(nbTrends$year, nbTrends$abundance, ylim = c(0.2,0.8), ylab = "Index of abundance", xlab = "Year",
+     main = "Fox Sparrow abundance on NB BBS routes")
+lines(nbTrends$year, nbTrends$lowerci)
+lines(nbTrends$year, nbTrends$upperci)
+
+qcTrends <- read.csv("qcTrends.csv")
+plot(qcTrends$year, qcTrends$abundance, ylim = c(0.8,5), ylab = "Index of abundance", xlab = "Year",
+      main = "Fox Sparrow abundance on Quebec BBS routes")
+lines(qcTrends$year, qcTrends$abundance, ylim = c(0.8,5), ylab = "Index of abundance", xlab = "Year",
+     main = "Fox Sparrow abundance on Quebec BBS routes")
+lines(qcTrends$year, qcTrends$lowerci)
+lines(qcTrends$year, qcTrends$upperci)
+
+## Get elevations of eBird records:
+ebdElevs <- read.csv("ee-chart.csv")
+hist(ebdElevs$elev, main = "", xlab="Elevation (m) of Fox Sparrow records in eBird")
+
+## Get area of young softwood in Maine over time:
+forestAreaMaine <- read.csv("forestAreaMaine.csv")
+plot(forestAreaMaine$year, forestAreaMaine$total, type = "b", ylim = c(0,3500), col = "black",
+     ylab = "Area (thousands of acres)", xlab = "Year")
+points(forestAreaMaine$year, forestAreaMaine$bf, col = "green")
+lines(forestAreaMaine$year, forestAreaMaine$bf, col = "green")
+points(forestAreaMaine$year, forestAreaMaine$rs, col = "red")
+lines(forestAreaMaine$year, forestAreaMaine$rs, col = "red")
+points(forestAreaMaine$year, forestAreaMaine$rsbf, col = "purple")
+lines(forestAreaMaine$year, forestAreaMaine$rsbf, col = "purple")
+legend("topleft", "Forest type", legend = c("Total", "Balsam fir", "Red spruce", "Fir/spruce"),
+       lty = c(1,1,1,1), col= (c("black","green","red","purple")))
