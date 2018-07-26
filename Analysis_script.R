@@ -723,11 +723,13 @@ FOSP.df <- data.frame(success = props$success, failure = props$failures,
 FOSP.m1 <- glm(cbind(success,failure) ~ year + effort, family = binomial, data = FOSP.df)
 summary(FOSP.m1)
 
+
 FOSP.m2 <- glm(cbind(success,failure) ~ year, family = binomial, data = FOSP.df)
 summary(FOSP.m2)
-
+confint(FOSP.m2)
 # Test for overdispersion:
 ## None, estimated at 0.85
+1-pchisq((sum(residuals(object = FOSP.m2, type = "pearson")^2)), 12) # p = 0.60
 ### FOSP.m2 <- glm(y ~ props$YEAR, family = quasibinomial)
 ### summary(FOSP.m2)
 
@@ -744,12 +746,12 @@ yvals$lowerci <- yvals$fit - yvals$se.fit*2
 par(mar = c(5.1,5.1,4.1,2.1))
 plot(x = props$YEAR, y = props$proportion, ylab = "Proportion of checklists\nreporting Fox Sparrow",
      xlab = "Year",
-     pch = 16, col = "blue", lwd = 2)
+     pch = 16, col = "black", lwd = 2)
 
 # add the fitted line
-lines(newdata$year, yvals$fit, col = "red", lwd = 2)
-lines(newdata$year, yvals$lowerci, col = "red", lwd = 2, lty = 3)
-lines(newdata$year, yvals$upperci, col = "red", lwd = 2, lty = 3)
+lines(newdata$year, yvals$fit, col = "black", lwd = 2)
+lines(newdata$year, yvals$lowerci, col = "black", lwd = 2, lty = 3)
+lines(newdata$year, yvals$upperci, col = "black", lwd = 2, lty = 3)
 
 
 # Repeat approach for BITH:
@@ -791,15 +793,17 @@ summary(BITH.m1)
 
 BITH.m2 <- glm(cbind(success,failure) ~ year, family = binomial, data = BITH.df)
 summary(BITH.m2)
+confint(BITH.m2)
 
 BITH.m2OD <- glm(cbind(success,failure) ~ year, family = quasibinomial, data = BITH.df)
 summary(BITH.m2OD)
-
+confint(BITH.m2OD)
 # The best model is the simpler model, with an effect of Year only:
 anova(BITH.m1, BITH.m2, test = "Chisq")
+1-pchisq((sum(residuals(object = BITH.m2, type = "pearson")^2)), 12) # p = 0.08
 
 # predict values of y from xv and m2
-yvalsBith <- predict(BITH.m2OD, newdata = newdata, type = "response",se.fit = TRUE)
+yvalsBith <- predict(BITH.m2, newdata = newdata, type = "response",se.fit = TRUE)
 yvalsBith$upperci <- yvalsBith$fit + yvalsBith$se.fit*2
 yvalsBith$lowerci <- yvalsBith$fit - yvalsBith$se.fit*2
 
@@ -852,16 +856,17 @@ BLPW.df <- data.frame(success = propsBlpw$success, failure = propsBlpw$failures,
 
 BLPW.m1 <- glm(cbind(success,failure) ~ year + effort, family = binomial, data = BLPW.df)
 summary(BLPW.m1)
-
+confint(BLPW.m1)
 BLPW.m2 <- glm(cbind(success,failure) ~ year, family = binomial, data = BLPW.df)
 summary(BLPW.m2)
+confint(BLPW.m2)
 
 BLPW.m3 <- glm(cbind(success,failure) ~ year + I(year^2) + effort, family = binomial, data = BLPW.df)
 summary(BLPW.m3)
 
 # The best model is the simpler model, with an effect of Year only:
-anova(BLPW.m1, BLPW.m2, BLPW.m3, test = "Chisq")
-
+anova(BLPW.m1, BLPW.m2, test = "Chisq")
+1-pchisq((sum(residuals(object = BLPW.m2, type = "pearson")^2)), 12) # p = 0.11
 # predict values of y from xv and m2
 yvalsBlpw <- predict(BLPW.m2, newdata = newdata, type = "response",se.fit = TRUE)
 yvalsBlpw$upperci <- yvalsBlpw$fit + yvalsBlpw$se.fit*2
@@ -879,27 +884,27 @@ lines(newdata$year, yvalsBlpw$upperci, col = "red", lwd = 2, lty = 3)
 
 ## Plot together:
 ### Fox Sparrow
-
-par(mar = c(5.1,5.1,4.1,2.1))
-par(mfrow = c(2,2))
+tiff(filename = "Figure2.tiff", width = 4, height = 6, units = "in", res = 600)
+par(mar = c(5.1,5.1,0.75,2.1))
+par(mfrow = c(3,1))
 plot(x = props$YEAR, y = props$proportion, ylab = "Proportion of cells\nreporting Fox Sparrow",
      xlab = "Year",
-     pch = 16, col = "red", lwd = 2)
+     pch = 16, col = "black", lwd = 2)
 
 # add the fitted line
-lines(newdata$year, yvals$fit, col = "red", lwd = 2)
-lines(newdata$year, yvals$lowerci, col = "red", lwd = 2, lty = 3)
-lines(newdata$year, yvals$upperci, col = "red", lwd = 2, lty = 3)
+lines(newdata$year, yvals$fit, col = "black", lwd = 2)
+lines(newdata$year, yvals$lowerci, col = "black", lwd = 2, lty = 3)
+lines(newdata$year, yvals$upperci, col = "black", lwd = 2, lty = 3)
 
 ### Bicknell's Thrush:
 plot(x = propsBith$YEAR, y = propsBith$proportion, ylab = "Proportion of cells\nreporting Bicknell's Thrush",
      xlab = "Year",
-     pch = 16, col = "blue", lwd = 2)
+     pch = 16, col = "black", lwd = 2)
 
 # add the fitted line
-lines(newdata$year, yvalsBith$fit, col = "blue", lwd = 2)
-lines(newdata$year, yvalsBith$lowerci, col = "blue", lwd = 2, lty = 3)
-lines(newdata$year, yvalsBith$upperci, col = "blue", lwd = 2, lty = 3)
+lines(newdata$year, yvalsBith$fit, col = "black", lwd = 2)
+lines(newdata$year, yvalsBith$lowerci, col = "black", lwd = 2, lty = 3)
+lines(newdata$year, yvalsBith$upperci, col = "black", lwd = 2, lty = 3)
 
 
 ### Blackpoll Warbler
@@ -911,6 +916,7 @@ plot(x = propsBlpw$YEAR, y = propsBlpw$proportion, ylab = "Proportion of cells\n
 lines(newdata$year, yvalsBlpw$fit, col = "black", lwd = 2)
 lines(newdata$year, yvalsBlpw$lowerci, col = "black", lwd = 2, lty = 3)
 lines(newdata$year, yvalsBlpw$upperci, col = "black", lwd = 2, lty = 3)
+dev.off()
 
 coef(FOSP.m2) 
 confint(FOSP.m2) #average gain of 18% per year, 95% CI = 9.7 - 27.4
@@ -972,9 +978,25 @@ lines(qcTrends$year, qcTrends$lowerci)
 lines(qcTrends$year, qcTrends$upperci)
 
 ## Get elevations of eBird records:
-ebdElevs <- read.csv("ee-chart.csv")
-hist(ebdElevs$elev, main = "", xlab="Elevation (m) of Fox Sparrow records in eBird")
+ebdElevsME <- read.csv("fospEbirdElevationsJunJulMaine.csv")
+ebdElevsME$Band.Value <- as.numeric(gsub(",","",ebdElevsME$Band.Value))
+ebdElevsME <- ebdElevsME[complete.cases(ebdElevsME),]
+a <- unlist(lapply(seq_along(ebdElevsME$elevation.Count), 
+                   function(x)rep(ebdElevsME[x,1], ebdElevsME[x,2])))
 
+ebdElevsNH <- read.csv("fospEbirdElevationsJunJulNH.csv")
+ebdElevsNH$Band.Value <- as.numeric(gsub(",","",ebdElevsNH$Band.Value))
+ebdElevsNH <- ebdElevsNH[complete.cases(ebdElevsNH),]
+b <- unlist(lapply(seq_along(ebdElevsNH$elevation.Count), 
+                   function(x)rep(ebdElevsNH[x,1], ebdElevsNH[x,2])))
+par(mai = c(1,2,1,1))
+par(mfrow = c(2,1))
+hist(a, main="",xlab="Elevation (m)", ylab = "Frequency of Fox Sparrow records\nfrom Maine eBird", 
+     cex.lab = 1.5, xlim = c(0,2000), ylim = c(0,35))
+text(x = 1950, y = 33, label = "A", font = 2)
+hist(b, main="",xlab="Elevation (m)", ylab = "Frequency of Fox Sparrow records\nfrom New Hampshire eBird", 
+     cex.lab = 1.5, xlim = c(0,2000), ylim = c(0,35))
+text(x = 1950, y = 33, label = "B", font = 2)
 ## Get area of young softwood in Maine over time:
 forestAreaMaine <- read.csv("forestAreaMaine.csv")
 plot(forestAreaMaine$year, forestAreaMaine$total, type = "b", ylim = c(0,3500), col = "black",
@@ -987,3 +1009,32 @@ points(forestAreaMaine$year, forestAreaMaine$rsbf, col = "purple")
 lines(forestAreaMaine$year, forestAreaMaine$rsbf, col = "purple")
 legend("topleft", "Forest type", legend = c("Total", "Balsam fir", "Red spruce", "Fir/spruce"),
        lty = c(1,1,1,1), col= (c("black","green","red","purple")))
+
+## Mapping locations
+library(sf)
+library(rlang)
+library(ggplot2)
+library(maps)
+library(data.table)
+library(lubridate)
+ebFospToMap <- fread("/Users/johnlloyd/Documents/GitHub/foxSparrows/ebd_foxspa_prv_relMay-2018/ebd_foxspa_prv_relMay-2018.txt",
+                   header = T)
+ebFospToMap$DATE <- as.POSIXct(ebFospToMap$`OBSERVATION DATE`)
+ebFospToMap$MONTH <- month(ebFospToMap$DATE)
+ebFospToMap.reduced <- ebFospToMap %>%
+  filter(COUNTRY == "United States") %>%
+  filter(STATE == "Maine"|STATE == "New Hampshire"|
+           STATE == "New York"|STATE == "Vermont") %>%
+  filter(MONTH == 6|MONTH == 7)
+
+fospPoints <- st_as_sf(ebFospToMap.reduced, coords = c("LONGITUDE","LATITUDE"), crs = 4326)
+us_states <- map("state", plot = FALSE, fill = TRUE)
+states_sf <- st_as_sf(us_states)
+names(states_sf)
+neSF <- filter(states_sf, ID == "new hampshire"|ID == "vermont"|ID == "maine"|ID == "new york")
+p1 <- ggplot() + 
+  geom_sf(data = neSF) + theme_minimal()
+tiff(filename = "Figure1.tiff", width = 6, height = 4, units = "in", res = 300)
+p1 + geom_sf(data = fospPoints)
+dev.off()
+
