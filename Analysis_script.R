@@ -918,6 +918,44 @@ lines(newdata$year, yvalsBlpw$lowerci, col = "black", lwd = 2, lty = 3)
 lines(newdata$year, yvalsBlpw$upperci, col = "black", lwd = 2, lty = 3)
 dev.off()
 
+## As a PDF
+## Plot together:
+### Fox Sparrow
+pdf(file = "Figure2.pdf", width = 4, height = 6)
+par(mar = c(5.1,5.1,0.75,2.1))
+par(mfrow = c(3,1))
+plot(x = props$YEAR, y = props$proportion, ylab = "Proportion of cells\nreporting Fox Sparrow",
+     xlab = "Year",
+     pch = 16, col = "black", lwd = 2)
+
+# add the fitted line
+lines(newdata$year, yvals$fit, col = "black", lwd = 2)
+lines(newdata$year, yvals$lowerci, col = "black", lwd = 2, lty = 5)
+lines(newdata$year, yvals$upperci, col = "black", lwd = 2, lty = 5)
+
+### Bicknell's Thrush:
+plot(x = propsBith$YEAR, y = propsBith$proportion, ylab = "Proportion of cells\nreporting Bicknell's Thrush",
+     xlab = "Year",
+     pch = 16, col = "black", lwd = 2)
+
+# add the fitted line
+lines(newdata$year, yvalsBith$fit, col = "black", lwd = 2)
+lines(newdata$year, yvalsBith$lowerci, col = "black", lwd = 2, lty = 5)
+lines(newdata$year, yvalsBith$upperci, col = "black", lwd = 2, lty = 5)
+
+
+### Blackpoll Warbler
+plot(x = propsBlpw$YEAR, y = propsBlpw$proportion, ylab = "Proportion of cells\nreporting Blackpoll Warbler",
+     xlab = "Year",
+     pch = 16, col = "black", lwd = 2)
+
+# add the fitted line
+lines(newdata$year, yvalsBlpw$fit, col = "black", lwd = 2)
+lines(newdata$year, yvalsBlpw$lowerci, col = "black", lwd = 2, lty = 5)
+lines(newdata$year, yvalsBlpw$upperci, col = "black", lwd = 2, lty = 5)
+dev.off()
+
+
 coef(FOSP.m2) 
 confint(FOSP.m2) #average gain of 18% per year, 95% CI = 9.7 - 27.4
 
@@ -989,14 +1027,28 @@ ebdElevsNH$Band.Value <- as.numeric(gsub(",","",ebdElevsNH$Band.Value))
 ebdElevsNH <- ebdElevsNH[complete.cases(ebdElevsNH),]
 b <- unlist(lapply(seq_along(ebdElevsNH$elevation.Count), 
                    function(x)rep(ebdElevsNH[x,1], ebdElevsNH[x,2])))
+tiff(filename = "Figure3.tiff", width = 6, height = 8, units = "in", res = 300)
 par(mai = c(1,2,1,1))
 par(mfrow = c(2,1))
-hist(a, main="",xlab="Elevation (m)", ylab = "Frequency of Fox Sparrow records\nfrom Maine eBird", 
+hist(a, main="",xlab="Elevation (m)", ylab = "Number of Fox Sparrow\nrecords", 
      cex.lab = 1.5, xlim = c(0,2000), ylim = c(0,35))
 text(x = 1950, y = 33, label = "A", font = 2)
-hist(b, main="",xlab="Elevation (m)", ylab = "Frequency of Fox Sparrow records\nfrom New Hampshire eBird", 
+hist(b, main="",xlab="Elevation (m)", ylab = "Number of Fox Sparrow\nrecords", 
      cex.lab = 1.5, xlim = c(0,2000), ylim = c(0,35))
 text(x = 1950, y = 33, label = "B", font = 2)
+dev.off()
+
+## As a PDF
+pdf(file = "Figure3.pdf", width = 6, height = 8)
+par(mai = c(1,2,1,1))
+par(mfrow = c(2,1))
+hist(a, main="",xlab="Elevation (m)", ylab = "Number of Fox Sparrow\nrecords", 
+     cex.lab = 1.5, xlim = c(0,2000), ylim = c(0,35))
+text(x = 1950, y = 33, label = "A", font = 2)
+hist(b, main="",xlab="Elevation (m)", ylab = "Number of Fox Sparrow\nrecords", 
+     cex.lab = 1.5, xlim = c(0,2000), ylim = c(0,35))
+text(x = 1950, y = 33, label = "B", font = 2)
+dev.off()
 ## Get area of young softwood in Maine over time:
 forestAreaMaine <- read.csv("forestAreaMaine.csv")
 plot(forestAreaMaine$year, forestAreaMaine$total, type = "b", ylim = c(0,3500), col = "black",
@@ -1037,4 +1089,15 @@ p1 <- ggplot() +
 tiff(filename = "Figure1.tiff", width = 6, height = 4, units = "in", res = 300)
 p1 + geom_sf(data = fospPoints)
 dev.off()
+
+##As a PDF:
+pdf(file = "Figure1.pdf", width = 6, height = 4)
+p1 + geom_sf(aes(color = year), data = fospPoints) + scale_color_viridis_c()
+dev.off()
+
+##As a JPEG for the website
+jpeg(file = "fospMap.jpg", width = 6, height = 4, units = "in", res = 300)
+p1 + geom_sf(aes(color = year), data = fospPoints) + scale_color_viridis_c()
+dev.off()
+
 
