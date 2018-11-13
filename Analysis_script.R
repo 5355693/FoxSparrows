@@ -9,6 +9,7 @@ library(maptools)
 library(raster)
 library(maps)
 library(rgdal)
+
 ##First read in checklists from the eBird Basic Data set, which contains all Fox Sparrow records,
 ##including from incomplete checklists.
 ebAllFosp <- fread("/Users/johnlloyd/GitHub/FoxSparrows/ebd_foxspa_relNov-2017.txt",
@@ -73,6 +74,7 @@ match("Catharus_bicknelli",names(sample.file)) #754
 
 checklists.2002 <- fread("/Users/johnlloyd/eBirdComplete/Checklists2002&Before.csv",
                          sep = ",", select = c(1:19, 2960, 3884, 754))
+length(count.fields("/Users/johnlloyd/eBirdComplete/Checklists2002&Before.csv", sep = ","))
 
 #Filter out US records of interest
 checklists.2002.US <- checklists.2002 %>%
@@ -932,6 +934,7 @@ plot(x = props$YEAR, y = props$proportion, ylab = "Proportion of cells\nreportin
 lines(newdata$year, yvals$fit, col = "black", lwd = 2)
 lines(newdata$year, yvals$lowerci, col = "black", lwd = 2, lty = 5)
 lines(newdata$year, yvals$upperci, col = "black", lwd = 2, lty = 5)
+text(x = 2003, y = 0.07, label = "A", font = 2)
 
 ### Bicknell's Thrush:
 plot(x = propsBith$YEAR, y = propsBith$proportion, ylab = "Proportion of cells\nreporting Bicknell's Thrush",
@@ -942,7 +945,7 @@ plot(x = propsBith$YEAR, y = propsBith$proportion, ylab = "Proportion of cells\n
 lines(newdata$year, yvalsBith$fit, col = "black", lwd = 2)
 lines(newdata$year, yvalsBith$lowerci, col = "black", lwd = 2, lty = 5)
 lines(newdata$year, yvalsBith$upperci, col = "black", lwd = 2, lty = 5)
-
+text(x = 2003, y = 0.15, label = "B", font = 2)
 
 ### Blackpoll Warbler
 plot(x = propsBlpw$YEAR, y = propsBlpw$proportion, ylab = "Proportion of cells\nreporting Blackpoll Warbler",
@@ -953,6 +956,7 @@ plot(x = propsBlpw$YEAR, y = propsBlpw$proportion, ylab = "Proportion of cells\n
 lines(newdata$year, yvalsBlpw$fit, col = "black", lwd = 2)
 lines(newdata$year, yvalsBlpw$lowerci, col = "black", lwd = 2, lty = 5)
 lines(newdata$year, yvalsBlpw$upperci, col = "black", lwd = 2, lty = 5)
+text(x = 2003, y = 0.42, label = "C", font = 2)
 dev.off()
 
 
@@ -1100,4 +1104,106 @@ jpeg(file = "fospMap.jpg", width = 6, height = 4, units = "in", res = 300)
 p1 + geom_sf(aes(color = year), data = fospPoints) + scale_color_viridis_c()
 dev.off()
 
+##
+numberOfRows <- vector(mode = "numeric", length = 16)
+numberOfRows[1] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2002AndEarlier.csv", intern = TRUE)
+numberOfRows[2] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2003.csv", intern = TRUE)
+numberOfRows[3] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2004.csv", intern = TRUE)
+numberOfRows[4] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2005.csv", intern = TRUE)
+numberOfRows[5] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2006.csv", intern = TRUE)
+numberOfRows[6] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2007.csv", intern = TRUE)
+numberOfRows[7] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2008.csv", intern = TRUE)
+numberOfRows[8] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2009.csv", intern = TRUE)
+numberOfRows[9] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2010.csv", intern = TRUE)
+numberOfRows[10] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2011.csv", intern = TRUE)
+numberOfRows[11] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2012.csv", intern = TRUE)
+numberOfRows[12] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2013.csv", intern = TRUE)
+numberOfRows[13] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2014.csv", intern = TRUE)
+numberOfRows[14] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2015.csv", intern = TRUE)
+numberOfRows[15] <- system("wc -l /Volumes/JLloyd/eBirdCompleteChecklistsUnpacked/checklists2016.csv", intern = TRUE)
 
+#Map of Canadian points at beginning of study
+ebFospToMap <- fread("/Users/johnlloyd/Documents/GitHub/foxSparrows/ebd_foxspa_prv_relMay-2018/ebd_foxspa_prv_relMay-2018.txt",
+                     header = T)
+ebFospToMap$DATE <- as.POSIXct(ebFospToMap$`OBSERVATION DATE`)
+ebFospToMap$MONTH <- month(ebFospToMap$DATE)
+ebFospToMap.reduced <- ebFospToMap %>%
+  filter(COUNTRY == "Canada") %>%
+  filter(STATE == "Quebec"|STATE == "New Brunswick"|
+           STATE == "Nova Scotia") %>%
+  filter(MONTH == 6|MONTH == 7)
+
+fospPoints <- st_as_sf(ebFospToMap.reduced, coords = c("LONGITUDE","LATITUDE"), crs = 4326)
+us_states <- map("state", plot = FALSE, fill = TRUE)
+states_sf <- st_as_sf(us_states)
+names(states_sf)
+neSF <- filter(states_sf, ID == "new hampshire"|ID == "vermont"|ID == "maine"|ID == "new york")
+p1 <- ggplot() + 
+  geom_sf(data = neSF) + theme_minimal()
+tiff(filename = "Figure1.tiff", width = 6, height = 4, units = "in", res = 300)
+p1 + geom_sf(data = fospPoints)
+dev.off()
+
+#Get the points
+ebFospToMapCA <- fread("/Users/johnlloyd/Documents/ebd_foxspa_prv_relMay-2018.txt",
+                     header = T)
+ebFospToMapCA$DATE <- as.POSIXct(ebFospToMapCA$`OBSERVATION DATE`)
+ebFospToMapCA$MONTH <- month(ebFospToMapCA$DATE)
+ebFospToMapCA$YEAR <- year(ebFospToMapCA$DATE)
+ebFospToMapCA.reduced <- ebFospToMapCA %>%
+  filter(COUNTRY == "Canada") %>%
+  filter(STATE == "Quebec"|STATE == "New Brunswick"|
+           STATE == "Nova Scotia"|STATE == "Newfoundland and Labrador") %>%
+  filter(MONTH == 6|MONTH == 7) %>%
+  filter(YEAR < 1990)
+fospPointsCA <- st_as_sf(ebFospToMapCA.reduced, coords = c("LONGITUDE","LATITUDE"), crs = 4326)
+provinces <- c("Québec", "New Brunswick", "Nova Scotia", "Newfoundland and Labrador")
+states    <- c("Maine","New York","New Hampshire","Vermont", "Massachusetts", "Connecticut", "Rhode Island")
+
+us <- getData("GADM",country="USA",level=1)
+canada <- getData("GADM",country="CAN",level=1)
+
+us.states <- us[us$NAME_1 %in% states,]
+ca.provinces <- canada[canada$NAME_1 %in% provinces,]
+
+#Map the breeding range, as taken from BirdLife range maps:
+#library(rgdal)     # R wrapper around GDAL/OGR
+#library(ggplot2)   # for general plotting
+#library(ggmaps)    # for fortifying shapefiles
+
+# First read in the shapefile, using the path to the shapefile and the shapefile name minus the
+# extension as arguments
+breedingRange <- readOGR(dsn = getwd(), layer = "fospBreedingRange")
+
+# Next the shapefile has to be converted to a dataframe for use in ggplot2
+breedingRange_df <- fortify(breedingRange)
+
+p2 <- ggplot(us.states,aes(x=long,y=lat,group=group))+
+  geom_path()+
+  geom_polygon(data = breedingRange_df, 
+            aes(x = long, y = lat, group = group),
+            color = 'tan2', fill = 'tan2', size = .2) + 
+  geom_path(data=ca.provinces)# + 
+  #coord_map(xlim = c(-75,-50), ylim = c(40,70))
+quartz()
+p2 + geom_sf(data = fospPointsCA, inherit.aes = F, color = "#56B4E9") + coord_sf(xlim = c(-80,-50), ylim = c(40,65)) + 
+  xlab("Longitude") + ylab("Latitude")
+
+#Print it
+pdf(file = "rangeMap.pdf", width = 6, height = 8)
+p2 + geom_sf(data = fospPointsCA, inherit.aes = F, color = "#56B4E9") + coord_sf(xlim = c(-80,-50), ylim = c(40,65)) + 
+  xlab("Longitude") + ylab("Latitude")
+dev.off()
+
+#what is the average length of a traveling checklist?
+checklists.all %>%
+  filter(STATE_PROVINCE == "Maine"|STATE_PROVINCE == "New Hampshire"|
+           STATE_PROVINCE == "New York"|STATE_PROVINCE == "Vermont") %>%
+  filter(COUNT_TYPE == "P22") %>%
+  summarize(mean = mean(as.numeric(EFFORT_DISTANCE_KM)),
+            median = median(as.numeric(EFFORT_DISTANCE_KM)))
+  
+#Looking for evidence of an elevation X year effect
+fospElevations <- read.csv("ebirdFOSPRecordsUSAWithElevations.csv", header = T)
+
+  
